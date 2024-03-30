@@ -3,6 +3,7 @@ import TagLine from "./Tagline";
 const Heading = ({ className, title, text, tag }) => {
   return (
     <div
+      data-aos='fade-up' data-aos-duration="2000"
       className={`${className} max-w-[50rem] mx-auto mb-12 lg:mb-20 md:text-center`}
     >
       {tag && <TagLine className="mb-4 md:justify-center">{tag}</TagLine>}

@@ -1,16 +1,19 @@
-import { useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { disablePageScroll, enablePageScroll } from "scroll-lock";
-
-import { brainwave } from "../assets";
-import { navigation } from "../constants";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { app } from "../firebase";
 import Button from "./Button";
 import MenuSvg from "../assets/svg/MenuSvg";
 import { HamburgerMenu } from "./design/Header";
-import { useState } from "react";
+import { brainwaveSymbol } from "../assets";
 
 const Header = () => {
-  const pathname = useLocation();
   const [openNavigation, setOpenNavigation] = useState(false);
+  const navigate = useNavigate();
+  const [user, setUser] = useState(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [displayName, setDisplayName] = useState("");
 
   const toggleNavigation = () => {
     if (openNavigation) {
@@ -29,6 +32,39 @@ const Header = () => {
     setOpenNavigation(false);
   };
 
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(getAuth(app), (user) => {
+      if (!user) {
+        navigate("/signup");
+        setIsLoggedIn(false); 
+      } else {
+        setUser(user);
+        setDisplayName(user.displayName || "");
+        setIsLoggedIn(true);
+      }
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [navigate]);
+
+  const handleClick2 = () => {
+    const auth = getAuth(app);
+    auth.signOut();
+    setIsLoggedIn(false); // Update login status
+    localStorage.removeItem("isLoggedIn");
+  };
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      localStorage.setItem("isLoggedIn", "true"); // Set login status to true in local storage
+    } else {
+      localStorage.removeItem("isLoggedIn"); // Remove login status from local storage
+    }
+  }, [isLoggedIn]);
+
+
   return (
     <div
       className={`fixed top-0 left-0 w-full z-50  border-b border-n-6 lg:bg-n-8/90 lg:backdrop-blur-sm ${
@@ -36,9 +72,10 @@ const Header = () => {
       }`}
     >
       <div className="flex items-center px-5 lg:px-7.5 xl:px-10 max-lg:py-4">
-        <a className="block w-[12rem] xl:mr-8" href="#hero">
-          <img src={brainwave} width={190} height={40} alt="Brainwave" />
-        </a>
+        <Link className="xl:mr-1 flex items-center" to="/">
+          <img src={brainwaveSymbol} width={70} height={40} alt="Brainwave" />
+          <h2 className="text-[2rem] ml-1">EDT 215</h2>
+        </Link>
 
         <nav
           className={`${
@@ -46,36 +83,65 @@ const Header = () => {
           } fixed top-[5rem] left-0 right-0 bottom-0 bg-n-8 lg:static lg:flex lg:mx-auto lg:bg-transparent`}
         >
           <div className="relative z-2 flex flex-col items-center justify-center m-auto lg:flex-row">
-            {navigation.map((item) => (
-              <a
-                key={item.id}
-                href={item.url}
-                onClick={handleClick}
-                className={`block relative font-code text-2xl uppercase text-n-1 transition-colors hover:text-color-1 ${
-                  item.onlyMobile ? "lg:hidden" : ""
-                } px-6 py-6 md:py-8 lg:-mr-0.25 lg:text-xs lg:font-semibold ${
-                  item.url === pathname.hash
-                    ? "z-2 lg:text-n-1"
-                    : "lg:text-n-1/50"
+            <a
+              href="#hero"
+              onClick={handleClick}
+              className={`block relative font-code tracking-[.2rem] uppercase transition-color hover:text-color-1
+                  "lg:hidden" : ""
+                } px-6 py-6 md:py-8 lg:-mr-0.25 lg:text-xs lg:font-semibold 
+                  
+                    "z-2 lg:text-n-1"
+                   "lg:text-n-1/50"
                 } lg:leading-5 lg:hover:text-n-1 xl:px-12`}
-              >
-                {item.title}
-              </a>
-            ))}
-          </div>
+            >
+              Home
+            </a>
+            <a
+              href="#games"
+              onClick={handleClick}
+              className={`block relative font-code tracking-[.2rem] uppercase transition-color hover:text-color-1
+                  "lg:hidden" : ""
+                } px-6 py-6 md:py-8 lg:-mr-0.25 lg:text-xs lg:font-semibold 
+                  
+                    "z-2 lg:text-n-1"
+                   "lg:text-n-1/50"
+                } lg:leading-5 lg:hover:text-n-1 xl:px-12`}
+            >
+              View Our Games
+            </a>
+            <a
+              href="#contact"
+              onClick={handleClick}
+              className='block relative font-code tracking-[.2rem] uppercase transition-color hover:text-color-1
+                 px-6 py-6 md:py-8 lg:-mr-0.25 lg:text-xs lg:font-semibold 
+                    "z-2 lg:text-n-1"
+                   "lg:text-n-1/50"
+                } lg:leading-5 lg:hover:text-n-1 xl:px-12'
+            >
+              Contact
+            </a>
 
+            {!user ? (
+              <Link onClick={handleClick} to="/signup">
+                <Button className="text-[14px]">Sign In</Button>
+              </Link>
+            ) : (
+              <>
+                <Button
+                  className="mr-6 max-md:mb-5"
+                  onClick={handleClick2}
+                >
+                  Sign Out
+                </Button>
+                <div className="flex flex-col justify-center items-center">
+                  <p className="text-xs">Welcome,</p>
+                  <p className="text-sm capitalize">{displayName}</p>
+                </div>
+              </>
+            )}
+          </div>
           <HamburgerMenu />
         </nav>
-
-        <a
-          href="#signup"
-          className="button hidden mr-8 text-n-1/50 transition-colors hover:text-n-1 lg:block"
-        >
-          New account
-        </a>
-        <Button className="hidden lg:flex" href="#login">
-          Sign in
-        </Button>
 
         <Button
           className="ml-auto lg:hidden"
@@ -83,7 +149,7 @@ const Header = () => {
           onClick={toggleNavigation}
         >
           <MenuSvg openNavigation={openNavigation} />
-        </Button>
+        </Button> 
       </div>
     </div>
   );
