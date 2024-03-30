@@ -102,4 +102,8 @@ export const socials = [
     id: "21",
     title: "Tijani Oyinkansola Temidayo 220194094",
   },
+  {
+    id: "22",
+    title: "Tijani Oyinkansola Temidayo 220194094",
+  },
 ];
